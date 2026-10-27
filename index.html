@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>I’m sorry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0f1230;--bg2:#2a1b4d;--bg3:#6b3a6e;
+  --ink:#fdf2f5;--muted:#d9c3de;--accent:#ff9db5;--glow:#ffd6a5;
+  --card:rgba(255,255,255,.07);--line:rgba(255,255,255,.2);--btn-ink:#2a1b4d;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg1:#fff0f3;--bg2:#ffd9e3;--bg3:#f6bfd3;
+    --ink:#4a2338;--muted:#7a4a62;--accent:#d63e6a;--glow:#ff8fb0;
+    --card:rgba(255,255,255,.55);--line:rgba(74,35,56,.2);--btn-ink:#fff;
+    color-scheme:light;
+  }
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{
+  background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3)) fixed;
+  color:var(--ink);font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  overflow-x:hidden;
+}
+[hidden]{display:none!important}
+#sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+main{position:relative;min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px 20px}
+.card{
+  width:100%;max-width:520px;text-align:center;padding:36px 26px;border-radius:28px;
+  background:var(--card);border:1px solid var(--line);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 20px 60px rgba(0,0,0,.25),0 0 80px -20px var(--glow);
+  animation:rise 1.2s ease both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.eyebrow{font-family:"Caveat",cursive,sans-serif;font-size:1.5rem;color:var(--accent);margin:0 0 6px}
+h1{font-weight:600;font-size:clamp(2.2rem,9vw,3.2rem);margin:0 0 14px;line-height:1.1}
+.sub{color:var(--muted);font-style:italic;font-size:1.2rem;margin:0 0 28px}
+.heart{font-size:3rem;color:var(--accent);display:block;margin-bottom:10px;animation:beat 1.6s ease-in-out infinite;filter:drop-shadow(0 0 14px var(--accent))}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.18)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
+button{
+  font:inherit;font-size:1.2rem;font-weight:600;cursor:pointer;border:0;border-radius:999px;
+  padding:14px 28px;margin:6px;transition:transform .2s,box-shadow .2s;
+}
+button:active{transform:scale(.96)}
+.primary{background:var(--accent);color:var(--btn-ink);box-shadow:0 8px 28px -6px var(--accent)}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+#lines p{
+  margin:0 0 18px;font-size:1.35rem;line-height:1.5;opacity:0;transform:translateY(10px);
+  transition:opacity 1.4s ease,transform 1.4s ease;
+}
+#lines p.big{font-size:2.4rem;font-weight:600;color:var(--accent);margin-bottom:22px}
+#lines p.show,.late.show{opacity:1;transform:none}
+.late{opacity:0;transform:translateY(10px);transition:opacity 1.4s ease,transform 1.4s ease}
+#sig{font-family:"Caveat",cursive,sans-serif;font-size:1.9rem;color:var(--accent);margin:10px 0 24px}
+#ask p{color:var(--muted);font-style:italic;font-size:1.2rem;margin:0 0 10px}
+#reply{font-size:1.5rem;line-height:1.5;animation:rise 1s ease both}
+@media (prefers-reduced-motion:reduce){
+  .card,#reply{animation:none}.heart{animation:none}
+  #lines p,.late{transition:none}
+}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main>
+  <section class="card" id="intro">
+    <span class="heart" aria-hidden="true">♥</span>
+    <p class="eyebrow">a little note</p>
+    <h1>For <span id="to">you</span></h1>
+    <p class="sub">I have something I need to say.</p>
+    <button class="primary" id="open">Open</button>
+  </section>
+
+  <section class="card" id="letter" hidden>
+    <div id="lines"></div>
+    <div id="sig" class="late"></div>
+    <div id="ask" class="late">
+      <p>Can we start fresh?</p>
+      <button class="primary" id="yes">Yes, I forgive you</button>
+      <button class="ghost" id="wait">I need a little time</button>
+    </div>
+    <div id="reply" hidden></div>
+  </section>
+</main>
+
+<script>
+/* ✏️ EDIT THIS PART — your name, your friend’s name and your own words */
+const CONFIG = {
+  friend: "",            // e.g. "Sam" (leave empty to show “For you”)
+  me: "Me",              // your name, shown as the signature
+  lines: [
+    "I’ve been thinking about what happened, and honestly, I hate that I hurt you. I feel really guilty about it, and I wish I could take back the things that made you feel that way.",
+    "You didn’t deserve that, and it wasn’t your fault. It was my responsibility to handle my own emotions better, but I think I let them get mixed up with the way I treated you. I’m sorry for putting that on you when you didn’t deserve it.",
+    "I don’t even know how to apologize enough to make up for it. I just want you to know that I understand how I made you feel, and I’m taking responsibility for my actions.",
+    "You mean so much more to me than you could ever imagine, and the last thing I ever wanted was to hurt you. I can’t promise I’ll always handle every emotion perfectly, but I promise I’ll work on myself and learn to manage my feelings better instead of letting them affect you like that again.",
+    "If you’re willing, I’d really appreciate the chance to make things right, not just through my words, but through my actions, too.",
+    "I’m truly sorry. ❤️"
+  ],
+  yesReply: "Thank you. Truly. I’ll do better, starting today. ♥",
+  waitReply: "That’s okay. Take all the time you need. I’ll be here when you’re ready. ♥"
+};
+
+const $ = s => document.querySelector(s);
+const motion = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Sky: drifting fireflies + heart burst ---------- */
+const cv = $("#sky"), cx = cv.getContext("2d");
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+let W, H, glow, accent, hearts = [];
+function readColors(){
+  const s = getComputedStyle(document.documentElement);
+  glow = s.getPropertyValue("--glow").trim() || "#ffd6a5";
+  accent = s.getPropertyValue("--accent").trim() || "#ff9db5";
+}
+function resize(){
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener("resize", resize);
+matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", readColors);
+resize(); readColors();
+
+const flies = Array.from({length: 46}, () => ({
+  x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+  r: Math.random() * 2 + .8, s: Math.random() * .35 + .1,
+  p: Math.random() * 6.28, d: Math.random() * .8 + .3
+}));
+
+function frame(t){
+  cx.clearRect(0, 0, W, H);
+  const k = motion ? 1 : 0;
+  for (const f of flies){
+    f.y -= f.s * k; f.x += Math.sin(t / 1500 + f.p) * .3 * k;
+    if (f.y < -10){ f.y = H + 10; f.x = Math.random() * W; }
+    cx.globalAlpha = .3 + .7 * Math.abs(Math.sin(t / 1000 * f.d + f.p));
+    cx.fillStyle = cx.shadowColor = glow; cx.shadowBlur = 12;
+    cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, 6.283); cx.fill();
+  }
+  cx.shadowBlur = 0;
+  hearts = hearts.filter(h => h.life > 0);
+  for (const h of hearts){
+    h.x += h.vx; h.y += h.vy; h.vy += .1; h.life -= .01;
+    cx.globalAlpha = Math.max(h.life, 0);
+    cx.fillStyle = accent; cx.font = h.s + "px serif";
+    cx.fillText("♥", h.x, h.y);
+  }
+  cx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function burst(){
+  const n = motion ? 90 : 20;
+  for (let i = 0; i < n; i++){
+    const a = -Math.PI / 2 + (Math.random() - .5) * 2.2, v = Math.random() * 9 + 4;
+    hearts.push({x: W / 2, y: H * .65, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+                 s: Math.random() * 22 + 12, life: 1 + Math.random() * .4});
+  }
+}
+
+/* ---------- The letter ---------- */
+if (CONFIG.friend) $("#to").textContent = CONFIG.friend;
+$("#sig").textContent = "— " + CONFIG.me;
+const box = $("#lines");
+CONFIG.lines.forEach((text, i) => {
+  const p = document.createElement("p");
+  p.textContent = text;
+  if (i === CONFIG.lines.length - 1) p.className = "big";
+  box.appendChild(p);
+});
+
+$("#open").onclick = () => {
+  $("#intro").hidden = true;
+  $("#letter").hidden = false;
+  const ps = [...box.children];
+  let at = 300;
+  ps.forEach(p => {
+    setTimeout(() => {
+      p.classList.add("show");
+      if (motion) p.scrollIntoView({behavior: "smooth", block: "nearest"});
+    }, at);
+    if (motion) at += 900 + p.textContent.length * 18;
+  });
+  setTimeout(() => {
+    $("#sig").classList.add("show"); $("#ask").classList.add("show");
+    if (motion) $("#ask").scrollIntoView({behavior: "smooth", block: "nearest"});
+  }, at + 600);
+};
+
+function answer(text, celebrate){
+  $("#ask").hidden = true;
+  const r = $("#reply"); r.textContent = text; r.hidden = false;
+  if (celebrate){ burst(); setTimeout(burst, 600); setTimeout(burst, 1200); }
+}
+$("#yes").onclick = () => answer(CONFIG.yesReply, true);
+$("#wait").onclick = () => answer(CONFIG.waitReply, false);
+</script>
+</body>
+</html>
